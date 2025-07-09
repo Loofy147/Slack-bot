@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "topic": "مثال على موضوع المشروع",
+    "timestamp": "2024-01-01T12:00:00",
+    "total_phases": 6,
+    "successful_phases": 6,
+    "success_rate": "100.0%"
+  },
+  "phases": {
+    "Phase 0": {
+      "phase": "Ideation",
+      "response": "نتائج مرحلة توليد الأفكار...",
+      "status": "success",
+      "timestamp": "2024-01-01T12:01:00"
+    },
+    "Phase 1": {
+      "phase": "Research",
+      "response": "نتائج مرحلة البحث...",
+      "status": "success",
+      "timestamp": "2024-01-01T12:02:00"
+    },
+    "Phase 2": {
+      "phase": "Design",
+      "response": "نتائج مرحلة التصميم...",
+      "status": "success",
+      "timestamp": "2024-01-01T12:03:00"
+    },
+    "Phase 3": {
+      "phase": "Development Plan",
+      "response": "نتائج مرحلة خطة التطوير...",
+      "status": "success",
+      "timestamp": "2024-01-01T12:04:00"
+    },
+    "Phase 4": {
+      "phase": "Execution",
+      "response": "نتائج مرحلة التنفيذ...",
+      "status": "success",
+      "timestamp": "2024-01-01T12:05:00"
+    },
+    "Phase 5": {
+      "phase": "Review & Optimize",
+      "response": "نتائج مرحلة المراجعة والتحسين...",
+      "status": "success",
+      "timestamp": "2024-01-01T12:06:00"
+    }
+  }
+}
