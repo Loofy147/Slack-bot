@@ -28,7 +28,7 @@ source venv/bin/activate  # على Linux/Mac
 venv\Scripts\activate     # على Windows
 
 # تثبيت التبعيات
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 ### 2. إعداد متغيرات البيئة
