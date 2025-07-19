@@ -35,8 +35,8 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # Global connections
-DB_POOL = None
-REDIS_CLIENT = None
+db_pool = None
+redis_client = None
 
 
 @asynccontextmanager
@@ -46,15 +46,16 @@ async def lifespan(_: FastAPI):
     To be used with the lifespan argument of the FastAPI constructor.
     """
     # Startup
-    DB_POOL = await asyncpg.create_pool(DATABASE_URL)
-    REDIS_CLIENT = redis.from_url(REDIS_URL)
+    global db_pool, redis_client
+    db_pool = await asyncpg.create_pool(DATABASE_URL)
+    redis_client = redis.from_url(REDIS_URL)
     logger.info("Database and Redis connections established")
 
     yield
 
     # Shutdown
-    await DB_POOL.close()
-    REDIS_CLIENT.close()
+    await db_pool.close()
+    redis_client.close()
     logger.info("Connections closed")
 
 
@@ -139,7 +140,7 @@ async def get_current_user(_: HTTPAuthorizationCredentials = Security(security))
 
 async def get_organization(user: dict = Depends(get_current_user)):
     """Get user's organization"""
-    async with DB_POOL.acquire() as conn:
+    async with db_pool.acquire() as conn:
         org = await conn.fetchrow(
             "SELECT * FROM organizations WHERE id = $1",
             user["organization_id"]
@@ -155,16 +156,16 @@ async def get_organization(user: dict = Depends(get_current_user)):
 async def check_rate_limit(user: dict = Depends(get_current_user)):
     """Check API rate limits"""
     key = f"rate_limit:{user['id']}"
-    current = await REDIS_CLIENT.get(key)
+    current = await redis_client.get(key)
 
     if current is None:
-        await REDIS_CLIENT.setex(key, 3600, 1)  # 1 hour window
+        await redis_client.setex(key, 3600, 1)  # 1 hour window
         return True
 
     if int(current) >= 1000:  # 1000 requests per hour
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
 
-    await REDIS_CLIENT.incr(key)
+    await redis_client.incr(key)
     return True
 
 # API Endpoints
@@ -192,7 +193,7 @@ async def create_organization(
     __: bool = Depends(check_rate_limit)
 ):
     """Create a new organization"""
-    async with DB_POOL.acquire() as conn:
+    async with db_pool.acquire() as conn:
         try:
             org_id = await conn.fetchval(
                 """INSERT INTO organizations (name, slug, subscription_tier)
@@ -214,7 +215,7 @@ async def list_projects(
     _: bool = Depends(check_rate_limit)
 ):
     """List projects for the organization"""
-    async with DB_POOL.acquire() as conn:
+    async with db_pool.acquire() as conn:
         query = """
             SELECT p.*, u.username as created_by_username
             FROM projects p
@@ -242,7 +243,7 @@ async def create_project(
     _: bool = Depends(check_rate_limit)
 ):
     """Create a new project"""
-    async with DB_POOL.acquire() as conn:
+    async with db_pool.acquire() as conn:
         project_id = await conn.fetchval(
             """INSERT INTO projects (organization_id, created_by, name, description, topic, priority)
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id""",
@@ -260,7 +261,7 @@ async def start_orchestration(
     _: bool = Depends(check_rate_limit)
 ):
     """Start an orchestration run"""
-    async with DB_POOL.acquire() as conn:
+    async with db_pool.acquire() as conn:
         # Create orchestration run record
         run_id = await conn.fetchval(
             """INSERT INTO orchestration_runs
@@ -289,7 +290,7 @@ async def get_orchestration_status(
     _: bool = Depends(check_rate_limit)
 ):
     """Get orchestration run status and results"""
-    async with DB_POOL.acquire() as conn:
+    async with db_pool.acquire() as conn:
         run = await conn.fetchrow(
             """SELECT * FROM orchestration_runs
                WHERE id = $1 AND user_id = $2""",
@@ -321,7 +322,7 @@ async def list_templates(
     _: bool = Depends(check_rate_limit)
 ):
     """List orchestration templates"""
-    async with DB_POOL.acquire() as conn:
+    async with db_pool.acquire() as conn:
         query = """
             SELECT t.*, u.username as created_by_username
             FROM orchestration_templates t
@@ -351,7 +352,7 @@ async def create_template(
     _: bool = Depends(check_rate_limit)
 ):
     """Create a new orchestration template"""
-    async with DB_POOL.acquire() as conn:
+    async with db_pool.acquire() as conn:
         template_id = await conn.fetchval(
             """INSERT INTO orchestration_templates
                (organization_id, created_by, name, description, category, template_data, is_public)
@@ -370,7 +371,7 @@ async def get_usage_analytics(
     _: bool = Depends(check_rate_limit)
 ):
     """Get usage analytics for the organization"""
-    async with DB_POOL.acquire() as conn:
+    async with db_pool.acquire() as conn:
         # API usage over time
         api_usage = await conn.fetch(
             f"""SELECT DATE(created_at) as date, COUNT(*) as requests, SUM(tokens_used) as tokens
@@ -412,7 +413,7 @@ async def run_orchestration_background(run_id: uuid.UUID, topic: str, integratio
         results = orchestrator.process_topic_enhanced(
             topic, integration_enabled)
 
-        async with DB_POOL.acquire() as conn:
+        async with db_pool.acquire() as conn:
             # Update run status
             await conn.execute(
                 """UPDATE orchestration_runs
@@ -437,7 +438,7 @@ async def run_orchestration_background(run_id: uuid.UUID, topic: str, integratio
 
     except (IOError, json.JSONDecodeError) as e:
         logger.error("Orchestration failed for run %s: %s", run_id, e)
-        async with DB_POOL.acquire() as conn:
+        async with db_pool.acquire() as conn:
             await conn.execute(
                 """UPDATE orchestration_runs
                    SET status = 'failed', error_details = $1, completed_at = NOW()

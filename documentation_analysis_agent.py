@@ -1,7 +1,12 @@
+"""
+This module defines the DocumentationAnalysisAgent class.
+"""
 from data_creator_agent import Agent, ArchitectureEventType
 
 
 class DocumentationAnalysisAgent(Agent):
+    """Agent for analyzing documentation files."""
+
     def __init__(self, name="DocumentationAnalysisAgent", message_bus=None, config=None):
         super().__init__(name=name, message_bus=message_bus, config=config)
         self.doc_file_extensions = self.config.get(
@@ -12,9 +17,11 @@ class DocumentationAnalysisAgent(Agent):
                 ArchitectureEventType.REPO_DATA_EXTRACTED, self)
 
     async def handle_message(self, msg):
+        """Handle incoming messages."""
         if msg.get("type") == ArchitectureEventType.REPO_DATA_EXTRACTED:
             print(
-                f"{self.name}: Received repository data for '{msg.get('source_repo')}'. Analyzing documentation files...")
+                f"{self.name}: Received repository data for '{msg.get('source_repo')}'. "
+                "Analyzing documentation files...")
 
             repo_name = msg.get('source_repo')
             files_data = msg.get('data', [])
