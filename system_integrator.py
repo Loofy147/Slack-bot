@@ -22,18 +22,7 @@ class SystemIntegrator:
         self.enabled_integrations = self._load_enabled_integrations()
         self.execution_log = []
 
-    def _load_enabled_integrations(self) -> Dict[str, bool]:
-        """تحميل التكاملات المفعلة"""
-        return {
-            'file_system': True,
-            'git_operations': True,
-            'package_management': True,
-            'database_operations': True,
-            'api_calls': True,
-            'deployment': True,
-            'system_commands': True,
-            'environment_variables': True
-        }
+    # --- Public Methods ---
 
     def execute_ai_request(self, request_type: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """تنفيذ طلب من الذكاء الاصطناعي"""
@@ -57,6 +46,20 @@ class SystemIntegrator:
             self._log_execution(request_type, parameters, error_result)
             return error_result
 
+    def get_execution_history(self) -> List[Dict[str, Any]]:
+        """الحصول على تاريخ التنفيذ"""
+        return self.execution_log
+
+    def enable_integration(self, integration_type: str):
+        """تفعيل تكامل معين"""
+        self.enabled_integrations[integration_type] = True
+
+    def disable_integration(self, integration_type: str):
+        """إلغاء تفعيل تكامل معين"""
+        self.enabled_integrations[integration_type] = False
+
+    # --- Private Methods ---
+
     def _route_request(self, request_type: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """توجيه الطلب للمعالج المناسب"""
         handlers = {
@@ -76,17 +79,7 @@ class SystemIntegrator:
 
         return handler(parameters)
 
-    def _handle_git_operations(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """معالجة عمليات Git"""
-        operation = params.get('operation')
-
-        if operation == 'commit':
-            return self._git_commit(params.get('message', 'AI automated commit'))
-        if operation == 'push':
-            return self._git_push(params.get('branch', 'main'))
-        if operation == 'create_branch':
-            return self._git_create_branch(params['branch_name'])
-        raise ValueError(f'عملية Git غير معروفة: {operation}')
+    # --- Handlers ---
 
     def _handle_file_operations(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """معالجة عمليات الملفات"""
@@ -102,18 +95,6 @@ class SystemIntegrator:
             return self._create_directory(params['path'])
         raise ValueError(f'عملية ملف غير معروفة: {operation}')
 
-    def _git_commit(self, message: str) -> Dict[str, Any]:
-        """تنفيذ git commit"""
-        return self._handle_system_commands({'command': f'git commit -m "{message}"'})
-
-    def _git_push(self, branch: str) -> Dict[str, Any]:
-        """تنفيذ git push"""
-        return self._handle_system_commands({'command': f'git push origin {branch}'})
-
-    def _git_create_branch(self, branch_name: str) -> Dict[str, Any]:
-        """إنشاء فرع جديد"""
-        return self._handle_system_commands({'command': f'git checkout -b {branch_name}'})
-
     def _handle_package_operations(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """معالجة عمليات الحزم"""
         operation = params.get('operation')
@@ -126,14 +107,6 @@ class SystemIntegrator:
             return self._update_packages()
         raise ValueError(f'عملية حزمة غير معروفة: {operation}')
 
-    def _uninstall_package(self, package: str) -> Dict[str, Any]:
-        """إلغاء تثبيت حزمة"""
-        return self._handle_system_commands({'command': f'pip uninstall -y {package}'})
-
-    def _update_packages(self) -> Dict[str, Any]:
-        """تحديث الحزم"""
-        return self._handle_system_commands({'command': 'pip install --upgrade -r requirements.txt'})
-
     def _handle_database_operations(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """معالجة عمليات قاعدة البيانات"""
         operation = params.get('operation')
@@ -145,34 +118,6 @@ class SystemIntegrator:
         if operation == 'migrate':
             return self._run_migrations()
         raise ValueError(f'عملية قاعدة بيانات غير معروفة: {operation}')
-
-    def _execute_database_query(self, query: str) -> Dict[str, Any]:
-        """تنفيذ استعلام على قاعدة البيانات"""
-        # This is a placeholder and should be implemented with a proper database connection
-        _ = query
-        return {
-            'success': False,
-            'error': 'Database connection not implemented',
-            'timestamp': datetime.now().isoformat()
-        }
-
-    def _backup_database(self) -> Dict[str, Any]:
-        """إنشاء نسخة احتياطية من قاعدة البيانات"""
-        # This is a placeholder and should be implemented with a proper database connection
-        return {
-            'success': False,
-            'error': 'Database backup not implemented',
-            'timestamp': datetime.now().isoformat()
-        }
-
-    def _run_migrations(self) -> Dict[str, Any]:
-        """تنفيذ migrations قاعدة البيانات"""
-        # This is a placeholder and should be implemented with a proper database connection
-        return {
-            'success': False,
-            'error': 'Database migration not implemented',
-            'timestamp': datetime.now().isoformat()
-        }
 
     def _handle_api_calls(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """معالجة استدعاءات API"""
@@ -204,36 +149,6 @@ class SystemIntegrator:
         if platform == 'docker':
             return self._deploy_to_docker(params)
         raise ValueError(f'منصة نشر غير مدعومة: {platform}')
-
-    def _deploy_to_heroku(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """نشر على Heroku"""
-        # This is a placeholder and should be implemented with proper Heroku integration
-        _ = params
-        return {
-            'success': False,
-            'error': 'Heroku deployment not implemented',
-            'timestamp': datetime.now().isoformat()
-        }
-
-    def _deploy_to_aws(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """نشر على AWS"""
-        # This is a placeholder and should be implemented with proper AWS integration
-        _ = params
-        return {
-            'success': False,
-            'error': 'AWS deployment not implemented',
-            'timestamp': datetime.now().isoformat()
-        }
-
-    def _deploy_to_docker(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """نشر على Docker"""
-        # This is a placeholder and should be implemented with proper Docker integration
-        _ = params
-        return {
-            'success': False,
-            'error': 'Docker deployment not implemented',
-            'timestamp': datetime.now().isoformat()
-        }
 
     def _handle_system_commands(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """معالجة أوامر النظام"""
@@ -269,32 +184,8 @@ class SystemIntegrator:
             return self._delete_env_variable(params['key'])
         raise ValueError(f'عملية متغير بيئة غير معروفة: {operation}')
 
-    def _get_env_variable(self, key: str) -> Dict[str, Any]:
-        """الحصول على قيمة متغير بيئة"""
-        value = os.getenv(key)
-        return {
-            'success': value is not None,
-            'key': key,
-            'value': value,
-            'timestamp': datetime.now().isoformat()
-        }
+    # --- File System Operations ---
 
-    def _delete_env_variable(self, key: str) -> Dict[str, Any]:
-        """حذف متغير بيئة"""
-        env_file = '.env'
-        if os.path.exists(env_file):
-            with open(env_file, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-            with open(env_file, 'w', encoding='utf-8') as f:
-                for line in lines:
-                    if not line.startswith(f'{key}='):
-                        f.write(line)
-        return {
-            'success': True,
-            'message': f'تم حذف متغير البيئة: {key}',
-            'timestamp': datetime.now().isoformat()
-        }
-    # تنفيذ العمليات الفعلية
     def _create_file(self, path: str, content: str) -> Dict[str, Any]:
         """إنشاء ملف جديد"""
         try:
@@ -364,6 +255,22 @@ class SystemIntegrator:
         except (IOError, FileNotFoundError) as e:
             raise IOError(f'فشل في تعديل الملف {path}: {e}') from e
 
+    # --- Git Operations ---
+
+    def _git_commit(self, message: str) -> Dict[str, Any]:
+        """تنفيذ git commit"""
+        return self._handle_system_commands({'command': f'git commit -m "{message}"'})
+
+    def _git_push(self, branch: str) -> Dict[str, Any]:
+        """تنفيذ git push"""
+        return self._handle_system_commands({'command': f'git push origin {branch}'})
+
+    def _git_create_branch(self, branch_name: str) -> Dict[str, Any]:
+        """إنشاء فرع جديد"""
+        return self._handle_system_commands({'command': f'git checkout -b {branch_name}'})
+
+    # --- Package Management Operations ---
+
     def _install_package(self, package: str) -> Dict[str, Any]:
         """تثبيت حزمة"""
         result = subprocess.run(
@@ -380,6 +287,78 @@ class SystemIntegrator:
             'error': result.stderr,
             'timestamp': datetime.now().isoformat()
         }
+
+    def _uninstall_package(self, package: str) -> Dict[str, Any]:
+        """إلغاء تثبيت حزمة"""
+        return self._handle_system_commands({'command': f'pip uninstall -y {package}'})
+
+    def _update_packages(self) -> Dict[str, Any]:
+        """تحديث الحزم"""
+        return self._handle_system_commands({'command': 'pip install --upgrade -r requirements.txt'})
+
+    # --- Database Operations ---
+
+    def _execute_database_query(self, query: str) -> Dict[str, Any]:
+        """تنفيذ استعلام على قاعدة البيانات"""
+        # This is a placeholder and should be implemented with a proper database connection
+        _ = query
+        return {
+            'success': False,
+            'error': 'Database connection not implemented',
+            'timestamp': datetime.now().isoformat()
+        }
+
+    def _backup_database(self) -> Dict[str, Any]:
+        """إنشاء نسخة احتياطية من قاعدة البيانات"""
+        # This is a placeholder and should be implemented with a proper database connection
+        return {
+            'success': False,
+            'error': 'Database backup not implemented',
+            'timestamp': datetime.now().isoformat()
+        }
+
+    def _run_migrations(self) -> Dict[str, Any]:
+        """تنفيذ migrations قاعدة البيانات"""
+        # This is a placeholder and should be implemented with a proper database connection
+        return {
+            'success': False,
+            'error': 'Database migration not implemented',
+            'timestamp': datetime.now().isoformat()
+        }
+
+    # --- Deployment Operations ---
+
+    def _deploy_to_heroku(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """نشر على Heroku"""
+        # This is a placeholder and should be implemented with proper Heroku integration
+        _ = params
+        return {
+            'success': False,
+            'error': 'Heroku deployment not implemented',
+            'timestamp': datetime.now().isoformat()
+        }
+
+    def _deploy_to_aws(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """نشر على AWS"""
+        # This is a placeholder and should be implemented with proper AWS integration
+        _ = params
+        return {
+            'success': False,
+            'error': 'AWS deployment not implemented',
+            'timestamp': datetime.now().isoformat()
+        }
+
+    def _deploy_to_docker(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """نشر على Docker"""
+        # This is a placeholder and should be implemented with proper Docker integration
+        _ = params
+        return {
+            'success': False,
+            'error': 'Docker deployment not implemented',
+            'timestamp': datetime.now().isoformat()
+        }
+
+    # --- Environment Variable Operations ---
 
     def _set_env_variable(self, key: str, value: str) -> Dict[str, Any]:
         """تعيين متغير بيئة"""
@@ -406,6 +385,47 @@ class SystemIntegrator:
             'success': True,
             'message': f'تم تعيين متغير البيئة: {key}',
             'timestamp': datetime.now().isoformat()
+        }
+
+    def _get_env_variable(self, key: str) -> Dict[str, Any]:
+        """الحصول على قيمة متغير بيئة"""
+        value = os.getenv(key)
+        return {
+            'success': value is not None,
+            'key': key,
+            'value': value,
+            'timestamp': datetime.now().isoformat()
+        }
+
+    def _delete_env_variable(self, key: str) -> Dict[str, Any]:
+        """حذف متغير بيئة"""
+        env_file = '.env'
+        if os.path.exists(env_file):
+            with open(env_file, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            with open(env_file, 'w', encoding='utf-8') as f:
+                for line in lines:
+                    if not line.startswith(f'{key}='):
+                        f.write(line)
+        return {
+            'success': True,
+            'message': f'تم حذف متغير البيئة: {key}',
+            'timestamp': datetime.now().isoformat()
+        }
+
+    # --- Helper Methods ---
+
+    def _load_enabled_integrations(self) -> Dict[str, bool]:
+        """تحميل التكاملات المفعلة"""
+        return {
+            'file_system': True,
+            'git_operations': True,
+            'package_management': True,
+            'database_operations': True,
+            'api_calls': True,
+            'deployment': True,
+            'system_commands': True,
+            'environment_variables': True
         }
 
     def _log_execution(self, request_type: str, parameters: Dict[str, Any], result: Dict[str, Any]):

@@ -1,9 +1,14 @@
+"""
+This module defines the CodeAnalysisAgent class.
+"""
 import ast
 
 from data_creator_agent import Agent, ArchitectureEventType
 
 
 class CodeAnalysisAgent(Agent):
+    """Agent for analyzing code structure."""
+
     def __init__(self, name="CodeAnalysisAgent", message_bus=None, config=None):
         super().__init__(name=name, message_bus=message_bus, config=config)
         self.code_file_extensions = self.config.get(
@@ -14,9 +19,11 @@ class CodeAnalysisAgent(Agent):
                 ArchitectureEventType.REPO_DATA_EXTRACTED, self)
 
     async def handle_message(self, msg):
+        """Handle incoming messages."""
         if msg.get("type") == ArchitectureEventType.REPO_DATA_EXTRACTED:
             print(
-                f"{self.name}: Received repository data for '{msg.get('source_repo')}'. Analyzing code files...")
+                f"{self.name}: Received repository data for '{msg.get('source_repo')}'. "
+                "Analyzing code files...")
 
             repo_name = msg.get('source_repo')
             files_data = msg.get('data', [])

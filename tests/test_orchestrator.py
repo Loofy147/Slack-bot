@@ -10,7 +10,7 @@ import uuid
 
 from enhanced_orchestrator import EnhancedOrchestrator
 from system_integrator import SystemIntegrator
-from api.main import app
+from api.main import APP as app
 from fastapi.testclient import TestClient
 
 # Test client
@@ -22,7 +22,8 @@ class TestEnhancedOrchestrator:
     @pytest.fixture
     def orchestrator(self):
         """Create orchestrator instance for testing"""
-        return EnhancedOrchestrator()
+        from config import Config
+        return EnhancedOrchestrator(Config())
     
     @pytest.fixture
     def mock_openai_response(self):
@@ -39,30 +40,31 @@ class TestEnhancedOrchestrator:
         assert orchestrator.system_integrator is not None
         assert len(orchestrator.phases) == 7
     
-    @patch('enhanced_orchestrator.OpenAI')
+    @patch('base_orchestrator.OpenAI')
     def test_call_model_with_integration(self, mock_openai, mock_openai_response):
         """Test AI model call with integration enabled"""
-        orchestrator = EnhancedOrchestrator()
+        from config import Config
+        orchestrator = EnhancedOrchestrator(Config())
         mock_openai.return_value.chat.completions.create.return_value = mock_openai_response
-        
+
         result = orchestrator.call_model_with_integration(
-            "Test prompt", 
+            "Test prompt",
             enable_integration=True
         )
-        
+
         assert result == "Test response from AI"
         mock_openai.return_value.chat.completions.create.assert_called_once()
     
-    @patch('enhanced_orchestrator.OpenAI')
+    @patch('base_orchestrator.OpenAI')
     def test_process_topic_enhanced(self, mock_openai, orchestrator, mock_openai_response):
         """Test complete topic processing"""
         mock_openai.return_value.chat.completions.create.return_value = mock_openai_response
-        
+
         with patch.object(orchestrator, '_load_template') as mock_template:
             mock_template.return_value.render.return_value = "Rendered template"
-            
+
             result = orchestrator.process_topic_enhanced("Test topic", False)
-            
+
             assert result is not None
             assert 'metadata' in result
             assert 'phases' in result
@@ -230,7 +232,8 @@ class TestIntegration:
                 choices=[Mock(message=Mock(content="Test AI response"))]
             )
             
-            orchestrator = EnhancedOrchestrator()
+            from config import Config
+            orchestrator = EnhancedOrchestrator(Config())
             
             with patch.object(orchestrator, '_load_template') as mock_template:
                 mock_template.return_value.render.return_value = "Test prompt"
@@ -256,7 +259,8 @@ class TestPerformance:
                 choices=[Mock(message=Mock(content="Fast response"))]
             )
             
-            orchestrator = EnhancedOrchestrator()
+            from config import Config
+            orchestrator = EnhancedOrchestrator(Config())
             
             with patch.object(orchestrator, '_load_template') as mock_template:
                 mock_template.return_value.render.return_value = "Test prompt"
