@@ -1,0 +1,52 @@
+apiVersion: skaffold/v2beta29
+kind: Config
+metadata:
+  name: ai-orchestrator
+build:
+  artifacts:
+  - image: ai-orchestrator/api
+    context: .
+    docker:
+      dockerfile: api/Dockerfile
+  - image: ai-orchestrator/worker
+    context: .
+    docker:
+      dockerfile: worker/Dockerfile
+deploy:
+  kubectl:
+    manifests:
+    - deployment/kubernetes/orchestrator-deployment.yaml
+portForward:
+- resourceType: service
+  resourceName: ai-orchestrator-api-service
+  port: 8000
+  localPort: 8080
+profiles:
+- name: dev
+  build:
+    artifacts:
+    - image: ai-orchestrator/api
+      context: .
+      docker:
+        dockerfile: api/Dockerfile
+      sync:
+        manual:
+        - src: 'api/**/*.py'
+          dest: .
+    - image: ai-orchestrator/worker
+      context: .
+      docker:
+        dockerfile: worker/Dockerfile
+      sync:
+        manual:
+        - src: 'worker/**/*.py'
+          dest: .
+  deploy:
+    kubectl:
+      manifests:
+      - deployment/kubernetes/orchestrator-deployment.yaml
+portForward:
+- resourceType: service
+  resourceName: ai-orchestrator-api-service
+  port: 8000
+  localPort: 8080

@@ -66,6 +66,11 @@ python orchestrator.py --input "موضوعك هنا" --verbose
 python slack_app.py
 ```
 
+### 5.
+```bash
+skaffold dev
+```
+
 في Slack، يمكنك استخدام:
 - `/orchestrate موضوعك` - لتحليل موضوع
 - `/orchestrate help` - للحصول على المساعدة

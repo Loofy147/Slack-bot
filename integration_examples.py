@@ -430,12 +430,13 @@ def get_example_by_topic(topic_keyword):
         'docker': DOCKER_SETUP_EXAMPLE,
         'github': GITHUB_ACTIONS_EXAMPLE
     }
-    
+
     for key, example in examples.items():
         if key in topic_keyword.lower():
             return example
-    
+
     return None
+
 
 if __name__ == '__main__':
     print("أمثلة على استخدام قدرات التكامل المباشر:")

@@ -40,8 +40,9 @@ class TestEnhancedOrchestrator:
         assert len(orchestrator.phases) == 7
     
     @patch('enhanced_orchestrator.OpenAI')
-    def test_call_model_with_integration(self, mock_openai, orchestrator, mock_openai_response):
+    def test_call_model_with_integration(self, mock_openai, mock_openai_response):
         """Test AI model call with integration enabled"""
+        orchestrator = EnhancedOrchestrator()
         mock_openai.return_value.chat.completions.create.return_value = mock_openai_response
         
         result = orchestrator.call_model_with_integration(
